@@ -1,3 +1,4 @@
+from urllib.parse import quote_plus
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,10 +16,10 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> str:
-        # SQLAlchemy URL format for PyMySQL:
-        # mysql+pymysql://user:password@host:port/dbname
+        password = quote_plus(self.db_password)
+
         return (
-            f"mysql+pymysql://{self.db_user}:{self.db_password}"
+            f"mysql+pymysql://{self.db_user}:{password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"
         )
 
