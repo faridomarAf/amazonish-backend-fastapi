@@ -1,5 +1,7 @@
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, DECIMAL, func
+from sqlalchemy import BigInteger, ForeignKey, Integer, String, DECIMAL, text
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+from sqlalchemy.dialects.mysql import DATETIME
 
 from app.db.base import Base
 
@@ -24,10 +26,10 @@ class Order(Base):
         BigInteger, ForeignKey("customer_addresses.id", ondelete="SET NULL"), nullable=True
     )
 
-    created_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
-    updated_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now(), onupdate=func.now()
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))
+    updated_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"), onupdate=text("CURRENT_TIMESTAMP(6)")
     )
 
 
@@ -46,5 +48,5 @@ class OrderItem(Base):
     unit_amount: Mapped[str] = mapped_column(DECIMAL(19, 4))
     unit_currency: Mapped[str] = mapped_column(String(3))
 
-    created_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))

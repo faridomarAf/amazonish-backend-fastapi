@@ -1,5 +1,7 @@
-from sqlalchemy import BigInteger, DateTime, JSON, String, func
+from sqlalchemy import BigInteger, JSON, String, text
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+from sqlalchemy.dialects.mysql import DATETIME
 
 from app.db.base import Base
 
@@ -17,10 +19,10 @@ class OutboxEvent(Base):
     event_type: Mapped[str] = mapped_column(String(128))
     payload: Mapped[dict] = mapped_column(JSON)
 
-    created_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
-    published_at: Mapped[str | None] = mapped_column(
-        DateTime(fsp=6), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))
+    published_at: Mapped[datetime | None] = mapped_column(
+        DATETIME(fsp=6), nullable=True)
     publish_attempts: Mapped[int] = mapped_column(BigInteger, default=0)
 
 
@@ -32,5 +34,5 @@ class EventInbox(Base):
     event_id: Mapped[str] = mapped_column(String(36))
     consumer: Mapped[str] = mapped_column(String(64))
 
-    received_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
+    received_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))

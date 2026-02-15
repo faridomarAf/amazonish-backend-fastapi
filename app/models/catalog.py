@@ -1,5 +1,7 @@
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text, DECIMAL, func
+from sqlalchemy import BigInteger, ForeignKey, String, Text, DECIMAL, text
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
+from sqlalchemy.dialects.mysql import DATETIME
 
 from app.db.base import Base
 
@@ -14,10 +16,10 @@ class Product(Base):
     status: Mapped[str] = mapped_column(
         String(32), default="ACTIVE", index=True)
 
-    created_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
-    updated_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now(), onupdate=func.now()
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))
+    updated_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"), onupdate=text("CURRENT_TIMESTAMP(6)")
     )
 
 
@@ -36,8 +38,8 @@ class Sku(Base):
     status: Mapped[str] = mapped_column(
         String(32), default="ACTIVE", index=True)
 
-    created_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now())
-    updated_at: Mapped[str] = mapped_column(
-        DateTime(fsp=6), server_default=func.now(), onupdate=func.now()
+    created_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"))
+    updated_at: Mapped[datetime] = mapped_column(
+        DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"), onupdate=text("CURRENT_TIMESTAMP(6)")
     )
