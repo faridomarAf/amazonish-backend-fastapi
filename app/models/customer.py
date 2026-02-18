@@ -16,6 +16,7 @@ class Customer(Base):
         String(32), index=True, nullable=True)
     first_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     last_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    hashed_password: Mapped[str] = mapped_column(String(255))
     status: Mapped[str] = mapped_column(String(32), default="ACTIVE")
 
     created_at: Mapped[datetime] = mapped_column(
