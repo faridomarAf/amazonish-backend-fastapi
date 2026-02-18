@@ -10,6 +10,8 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.13",
     "pymysql>=1.1",
+    "pytest>= 7.4.4",
+    "httpx>4.2.0"
 ]
 [build-system]
 requires = ["setuptools>=68"]
