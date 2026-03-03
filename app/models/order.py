@@ -1,5 +1,5 @@
 from sqlalchemy import BigInteger, ForeignKey, Integer, String, DECIMAL, text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from sqlalchemy.dialects.mysql import DATETIME
 
@@ -31,6 +31,8 @@ class Order(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DATETIME(fsp=6), server_default=text("CURRENT_TIMESTAMP(6)"), onupdate=text("CURRENT_TIMESTAMP(6)")
     )
+
+    order_items = relationship("OrderItem", backref="order")
 
 
 class OrderItem(Base):
