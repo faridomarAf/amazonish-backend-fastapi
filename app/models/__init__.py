@@ -5,6 +5,7 @@ from .order import Order, OrderItem
 from .events import OutboxEvent, EventInbox
 from .shipment import Shipment
 
+
 __all__ = [
     "Customer",
     "CustomerAddress",
