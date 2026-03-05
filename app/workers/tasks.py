@@ -5,6 +5,9 @@ from app.db.session import SessionLocal
 from app.models import OutboxEvent, Order, Inventory
 from app.workers.celery_app import celery_app
 
+import random
+from app.models import Shipment
+
 
 @celery_app.task
 def process_outbox():
@@ -26,6 +29,7 @@ def process_outbox():
 
 
 def handle_order_created(db, event):
+
     payload = event.payload
     order_id = payload["order_id"]
 
@@ -34,14 +38,35 @@ def handle_order_created(db, event):
     if not order:
         return
 
-    # Simulate payment success
-    order.status = "PAID"
+    # simulate payment success/failure
+    payment_success = random.random() > 0.2   # 80% success
 
-    # Capture inventory (reduce on_hand, reduce reserved)
-    items = order.order_items
+    if payment_success:
 
-    for item in items:
-        inventory = db.get(Inventory, item.sku_id)
+        order.status = "PAID"
 
-        inventory.on_hand -= item.qty
-        inventory.reserved -= item.qty
+        # capture inventory
+        for item in order.order_items:
+            inventory = db.get(Inventory, item.sku_id)
+
+            inventory.on_hand -= item.qty
+            inventory.reserved -= item.qty
+
+        # create shipment
+        shipment = Shipment(
+            order_id=order.id,
+            carrier="DHL",
+            tracking_number=f"TRK-{order.id}"
+        )
+
+        db.add(shipment)
+
+    else:
+
+        order.status = "CANCELLED"
+
+        # release inventory
+        for item in order.order_items:
+            inventory = db.get(Inventory, item.sku_id)
+
+            inventory.reserved -= item.qty
