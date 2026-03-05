@@ -3,6 +3,7 @@ from .catalog import Product, Sku
 from .inventory import Inventory
 from .order import Order, OrderItem
 from .events import OutboxEvent, EventInbox
+from .shipment import Shipment
 
 __all__ = [
     "Customer",
@@ -14,4 +15,5 @@ __all__ = [
     "OrderItem",
     "OutboxEvent",
     "EventInbox",
+    "Shipment"
 ]
