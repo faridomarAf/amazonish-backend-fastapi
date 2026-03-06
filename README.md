@@ -186,7 +186,7 @@ docker-compose up --build
 make migrate
 ```
 
-### 5. Seed sample data (optional)
+### 5. Seed sample data
 
 ```bash
 make seed
@@ -238,19 +238,38 @@ Open browser: `http://127.0.0.1:8000/docs`
 
 ## Testing
 
-Run tests using `pytest`:
+### Run all tests
 
 ```bash
 make test
 ```
 
-* Test user registration, login, catalog endpoints, and order creation
-* Use `httpx.AsyncClient` for async endpoint testing
-* Ensure safe inventory reservation works (no overselling)
+### Run specific test files
+
+```bash
+pytest tests/test_auth.py
+pytest tests/test_catalog.py
+pytest tests/test_orders.py
+pytest tests/test_health.py
+```
+
+### What is tested
+
+* User registration, login, and JWT validation
+* Product, SKU creation, and inventory initialization
+* Order creation with safe inventory reservation (no overselling)
+* Worker and outbox event processing
+* Health endpoints
+
+### Notes
+
+* Ensure services are running (`docker-compose up`) before running tests
+* Tests use `httpx.AsyncClient` for async endpoints
+* Sample data can be seeded using `make seed`
 
 ---
 
-## Future Improvements would be
+## Future Improvements
 
 * Integrate real payment gateway
 * Implement email notifications on shipment
@@ -259,5 +278,3 @@ make test
 * Implement logging & observability with structured logs
 * Improve Celery with retry and error handling
 * Add frontend integration
-
----
