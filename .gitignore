@@ -1,9 +1,37 @@
+# Virtual environments
 .venv/
 venv/
+
+# Environment variables
+.env
+
+# Python cache
 __pycache__/
 *.pyc
-*.egg-info/
 *.pyo
+
+# Python packaging
+*.egg-info/
 dist/
 build/
-.env
+
+# Test cache
+.pytest_cache/
+
+# Type checker / linters
+.mypy_cache/
+.ruff_cache/
+
+# Local databases
+*.db
+*.sqlite
+
+# Celery
+celerybeat-schedule*
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
