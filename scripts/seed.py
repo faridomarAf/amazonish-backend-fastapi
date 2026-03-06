@@ -1,115 +1,154 @@
 from decimal import Decimal
+from contextlib import contextmanager
 
 from app.db.session import SessionLocal
-from app.models import (
-    Customer,
-    Product,
-    Sku,
-    Inventory,
-)
+from app.models import Customer, Product, Sku, Inventory, Order, OrderItem
+
+
+@contextmanager
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def run():
-    db = SessionLocal()
+    with get_db() as db:
+        try:
+            print("Seeding database...")
 
-    try:
-        print("Seeding database...")
+            # ----------------------------
+            # 1) Create Customers (idempotent)
+            # ----------------------------
+            customers_data = [
+                {"email": "john@example.com",
+                    "first_name": "John", "last_name": "Doe"},
+                {"email": "alice@example.com",
+                    "first_name": "Alice", "last_name": "Smith"}
+            ]
 
-        # ----------------------------
-        # 1) Create Customers
-        # ----------------------------
-        customer1 = Customer(
-            email="john@example.com",
-            first_name="John",
-            last_name="Doe",
-            status="ACTIVE",
-        )
+            customers = []
+            for data in customers_data:
+                customer = db.query(Customer).filter_by(
+                    email=data["email"]).first()
+                if not customer:
+                    customer = Customer(
+                        email=data["email"],
+                        first_name=data["first_name"],
+                        last_name=data["last_name"],
+                        status="ACTIVE"
+                    )
+                    db.add(customer)
+                    db.flush()
+                customers.append(customer)
 
-        customer2 = Customer(
-            email="alice@example.com",
-            first_name="Alice",
-            last_name="Smith",
-            status="ACTIVE",
-        )
+            print(
+                f"Inserted/verified customers: {[c.email for c in customers]}")
 
-        db.add_all([customer1, customer2])
-        db.flush()  # Flush to get IDs without committing
+            # ----------------------------
+            # 2) Create Products (idempotent)
+            # ----------------------------
+            products_data = [
+                {"name": "MacBook Pro", "description": "Apple laptop"},
+                {"name": "Gaming Mouse", "description": "RGB mouse"},
+                {"name": "USB-C Hub", "description": "Multiport hub"}
+            ]
 
-        print("Inserted customers")
+            products = []
+            for data in products_data:
+                product = db.query(Product).filter_by(
+                    name=data["name"]).first()
+                if not product:
+                    product = Product(
+                        name=data["name"],
+                        description=data["description"],
+                        status="ACTIVE"
+                    )
+                    db.add(product)
+                    db.flush()
+                products.append(product)
 
-        # ----------------------------
-        # 2) Create Products
-        # ----------------------------
-        product1 = Product(
-            name="MacBook Pro",
-            description="Apple laptop",
-            status="ACTIVE",
-        )
+            print(f"Inserted/verified products: {[p.name for p in products]}")
 
-        product2 = Product(
-            name="Gaming Mouse",
-            description="RGB mouse",
-            status="ACTIVE",
-        )
+            # ----------------------------
+            # 3) Create SKUs (idempotent)
+            # ----------------------------
+            skus_data = [
+                {"product": products[0], "sku_code": "MBP-16-512",
+                    "title": "MacBook Pro 16 512GB", "price_amount": Decimal("2499.00")},
+                {"product": products[1], "sku_code": "MOUSE-RGB-01",
+                    "title": "RGB Gaming Mouse", "price_amount": Decimal("79.99")},
+                {"product": products[2], "sku_code": "HUB-USB-C-01",
+                    "title": "USB-C Hub", "price_amount": Decimal("49.99")}
+            ]
 
-        db.add_all([product1, product2])
-        db.flush()
+            skus = []
+            for data in skus_data:
+                sku = db.query(Sku).filter_by(
+                    sku_code=data["sku_code"]).first()
+                if not sku:
+                    sku = Sku(
+                        product_id=data["product"].id,
+                        sku_code=data["sku_code"],
+                        title=data["title"],
+                        price_amount=data["price_amount"],
+                        price_currency="USD",
+                        status="ACTIVE"
+                    )
+                    db.add(sku)
+                    db.flush()
+                skus.append(sku)
 
-        print("Inserted products")
+            print(f"Inserted/verified SKUs: {[s.sku_code for s in skus]}")
 
-        # ----------------------------
-        # 3) Create SKUs
-        # ----------------------------
-        sku1 = Sku(
-            product_id=product1.id,
-            sku_code="MBP-16-512",
-            title="MacBook Pro 16 512GB",
-            price_amount=Decimal("2499.00"),
-            price_currency="USD",
-            status="ACTIVE",
-        )
+            # ----------------------------
+            # 4) Create Inventory (idempotent)
+            # ----------------------------
+            inventory_data = [
+                {"sku": skus[0], "on_hand": 10},
+                {"sku": skus[1], "on_hand": 100},
+                {"sku": skus[2], "on_hand": 5}
+            ]
 
-        sku2 = Sku(
-            product_id=product2.id,
-            sku_code="MOUSE-RGB-01",
-            title="RGB Gaming Mouse",
-            price_amount=Decimal("79.99"),
-            price_currency="USD",
-            status="ACTIVE",
-        )
+            for data in inventory_data:
+                inv = db.query(Inventory).filter_by(
+                    sku_id=data["sku"].id).first()
+                if not inv:
+                    inv = Inventory(
+                        sku_id=data["sku"].id, on_hand=data["on_hand"], reserved=0)
+                    db.add(inv)
 
-        db.add_all([sku1, sku2])
-        db.flush()
+            db.commit()
+            print("Inventory inserted/verified")
 
-        print("Inserted skus")
+            # ----------------------------
+            # 5) Optional: Create Sample Order (idempotent)
+            # ----------------------------
+            existing_order = db.query(Order).filter_by(
+                customer_id=customers[0].id).first()
+            if not existing_order:
+                order = Order(customer_id=customers[0].id, status="PAID")
+                db.add(order)
+                db.flush()
 
-        # ----------------------------
-        # 4) Create Inventory
-        # ----------------------------
-        inventory1 = Inventory(
-            sku_id=sku1.id,
-            on_hand=10,
-            reserved=0,
-        )
+                order_item = OrderItem(
+                    order_id=order.id,
+                    sku_id=skus[0].id,
+                    qty=1,
+                    price_amount=skus[0].price_amount,
+                    price_currency=skus[0].price_currency
+                )
+                db.add(order_item)
+                db.commit()
+                print(f"Inserted sample order with ID: {order.id}")
 
-        inventory2 = Inventory(
-            sku_id=sku2.id,
-            on_hand=100,
-            reserved=0,
-        )
+            print("Seeding completed successfully")
 
-        db.add_all([inventory1, inventory2])
-
-        db.commit()
-
-        print("Inventory inserted")
-        print("Seeding completed successfully")
-
-    except Exception as e:
-        db.rollback()
-        print("Error occurred:", e)
-    finally:
-        db.close()
+        except Exception as e:
+            db.rollback()
+            print("Error occurred during seeding:", e)
 
 
 if __name__ == "__main__":
